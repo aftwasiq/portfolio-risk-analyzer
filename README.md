@@ -19,7 +19,8 @@ risk-analyzer/
 │   └── portfolio.h       # portfolio class declarations
 ├── data/
 │   └── dummy.csv         # trial data
-└── README.md             
+└── README.md
+# more to be added  
 ```
 
 ## Checklist
