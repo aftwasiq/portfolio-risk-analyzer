@@ -35,3 +35,31 @@ risk-analyzer/
 - [ ] User interface (web-application)
 - [ ] User input & dashboard
 - [ ] Connect the backend & frontend seamlessly
+
+## Build & Run Locally
+
+If you would like to test out this project yourself, make sure you have a C++ compiler installed. Assuming you do, follow these steps:
+
+Navigate to the directory.
+
+```bash
+cd path_to_dir/risk_analyzer/src
+```
+
+Compile.
+
+```bash
+g++ main.cpp risk.cpp stock.cpp portfolio.cpp -o risk_analyzer
+```
+
+Run the executable.
+
+```bash
+risk_analyzer.exe
+```
+
+or if you are working in a linux environment,
+
+```bash
+./risk_analyzer.exe
+```
