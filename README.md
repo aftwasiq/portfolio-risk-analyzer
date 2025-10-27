@@ -1,2 +1,8 @@
 cp317 project
-Project Made by : Maaz, Rayyan, Zohaib A, Abdullah
+by: 
+Abdullah Wasiq 169075367
+Parth Bhatt 169064657
+Maaz Ahmed 169068665
+RayyanAhmed 169063453
+Zohaib Ali 169063084
+
