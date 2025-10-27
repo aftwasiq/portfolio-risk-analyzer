@@ -12,7 +12,7 @@ risk-analyzer/
 │   ├── main.cpp          # temporary cli testing
 │   ├── stock.cpp         # stock class implementation
 │   ├── risk.cpp          # risk metrics implementation
-│   └── portfolio.cpp     # portfolio class (planned / optional)
+│   └── portfolio.cpp     
 ├── inc/
 │   ├── stock.h           # stock class declarations
 │   ├── risk.h            # risk class declarations
@@ -24,12 +24,13 @@ risk-analyzer/
 
 ## Checklist
 
-- [x] Load CSV stock data
+- [x] Load & Process CSV stock data
 - [x] Compute daily returns
 - [x] Compute risk metrics
 - [x] Analyze risk metrics 
 - [x] Text-based feedback/interpretation
 - [ ] Portfolio class (multi-stock support)
-- [ ] Save analysis history
 - [ ] Fetch real-time & historical data with API calls
-- [ ] User interface (web-app)
+- [ ] User interface (web-application)
+- [ ] User input & dashboard
+- [ ] Connect the backend & frontend seamlessly
