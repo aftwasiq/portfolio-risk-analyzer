@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Top navigation -->
+    <nav class="top-nav">
+        <img src="{{ url_for('static', filename='coins-512.png') }}" class="nav-logo" alt="Portfolia Logo">
+
+        <div class="nav-center">
+            <button class="nav-btn active" data-page="information">INFORMATION</button>
+            <button class="nav-btn" data-page="risk">RISK ANALYZER</button>
+            <button class="nav-btn" data-page="documentation">DOCUMENTATION</button>
+        </div>
+
+        <div class="account-menu">
+            <button id="accountBtn" class="nav-btn">ACCOUNT ▼</button>
+            <div id="accountDropdown">
+                <a href="/history">History</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="container" id="mainContainer">
+
+        <!-- INFORMATION PAGE -->
+        <div class="page" id="informationPage">
+            <h1>Information</h1>
+            <p>Edit this page later with layman-friendly information about portfolios and risk.</p>
+        </div>
+
+        <!-- RISK ANALYZER PAGE -->
+        <div class="page" id="riskPage">
+            <img src="{{ url_for('static', filename='logo.png') }}" class="page-logo" alt="Portfolia Logo">
+            <h2>Portfolio Risk Analyzer</h2>
+
+            <div class="options" id="frontOptions">
+                <div class="button-row">
+                    <div class="option-group">
+                        <button id="connectBtn" class="big-btn smooth-btn">Connect My Portfolio</button>
+                        <p class="helper-text">Link your trading platform dynamically. Supported: Interactive Brokers, Alpaca, Robinhood, Coinbase API...</p>
+                    </div>
+                    <div class="option-group upload-wrapper">
+                        <button id="uploadBtn" class="big-btn smooth-btn">Upload My Portfolio ▼</button>
+                        <p class="helper-text">Upload your portfolio in .csv format. Every major trading platform should provide this.</p>
+                        <form id="uploadForm">
+                            <input type="file" name="file" id="fileInput" required>
+                            <button type="submit" class="big-btn smooth-btn">Upload CSV</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results" class="fade-in hidden"></div>
+        </div>
+
+        <!-- DOCUMENTATION PAGE -->
+        <div class="page" id="documentationPage">
+            <h1>Documentation</h1>
+            <p>This page contains the structure and explanation of the project. Edit as needed.</p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
+

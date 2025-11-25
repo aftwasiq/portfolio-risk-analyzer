@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolia Sign up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="centered">
+    <div class="auth-container fade-in">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="auth-logo" alt="Portfolia Logo">
+        <h1>Create Account</h1>
+        <form action="/signup" method="POST" class="auth-form">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button class="big-btn smooth-btn" type="submit">Sign Up</button>
+        </form>
+        <p class="switch-auth">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolia history</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="top-nav">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="nav-logo" alt="Portfolia Logo">
+        <div class="nav-center">
+            <a href="/" style="color: white; text-decoration: none;"><button class="nav-btn">BACK TO APP</button></a>
+        </div>
+        <div class="account-menu">
+            <button id="accountBtn" class="nav-btn">ACCOUNT ▼</button>
+            <div id="accountDropdown">
+                <a href="/history">History</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>Your Upload History</h1>
+        {% if history %}
+        <table>
+            <tr>
+                <th>Portfolio Name</th>
+                <th>Uploaded</th>
+                <th>Total Return</th>
+                <th>Volatility</th>
+            </tr>
+            {% for h in history %}
+            <tr>
+                <td>{{ h[0] }}</td>
+                <td>{{ h[3] }}</td>
+                <td class="{{ 'positive' if h[1] >= 0 else 'negative' }}">{{ "%.2f"|format(h[1]) }}%</td>
+                <td class="{{ 'negative' if h[2] >= 0 else 'positive' }}">{{ "%.2f"|format(h[2]) }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #888; margin-top: 40px;">No upload history yet. Start by uploading your first portfolio!</p>
+        {% endif %}
+    </div>
+</body>
+</html>
