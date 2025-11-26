@@ -109,6 +109,7 @@ def logout():
     session.clear()
     return redirect(url_for('login_page'))
 
+import time
 
 def fetch_historical_data(tickers):
     """Fetch historical prices for multiple tickers and return a single merged DataFrame"""
@@ -128,6 +129,8 @@ def fetch_historical_data(tickers):
             
             if corrected_ticker != original_ticker:
                 print(f"Note: Converting {original_ticker} -> {corrected_ticker}")
+            
+            time.sleep(1)  # Wait 1 second between requests
             
             stock = yf.Ticker(corrected_ticker)
             hist = stock.history(period="1y", auto_adjust=True)
@@ -152,7 +155,6 @@ def fetch_historical_data(tickers):
     merged_df = pd.concat(all_data, ignore_index=True)
     merged_df = merged_df[["Ticker", "Date", "Close"]]
     return merged_df
-
 
 def save_merged_csv(df):
     csv_path = os.path.join(app.config['UPLOAD_FOLDER'], "merged_prices.csv")
@@ -361,4 +363,4 @@ def interpret():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
