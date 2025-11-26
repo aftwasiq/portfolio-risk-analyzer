@@ -6,7 +6,9 @@ import os
 import subprocess
 import yfinance as yf
 import pandas as pd
-import numpy as np
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -113,38 +115,15 @@ def logout():
 def fetch_historical_data(tickers):
     """Fetch historical prices for multiple tickers and return a single merged DataFrame"""
     all_data = []
-    
-    ticker_corrections = {
-        'FB': 'META',   
-        'GOOG': 'GOOGL',   
-    }
 
-    tickers_with_sp500 = tickers + ["^GSPC"]
-
-    for ticker in tickers_with_sp500:
-        try:
-            original_ticker = ticker
-            corrected_ticker = ticker_corrections.get(ticker, ticker)
-            
-            if corrected_ticker != original_ticker:
-                print(f"Note: Converting {original_ticker} -> {corrected_ticker}")
-            
-            stock = yf.Ticker(corrected_ticker)
-            hist = stock.history(period="1y", auto_adjust=True)
-            
-            if hist.empty:
-                print(f"Warning: No data for {ticker}")
-                continue
-                
-            hist = hist.reset_index()[["Date", "Close"]]
-            hist["Ticker"] = "S&P 500" if ticker == "^GSPC" else original_ticker
-            
-            print(f"{original_ticker}: {hist['Date'].min()} to {hist['Date'].max()}")
-            
-            all_data.append(hist)
-        except Exception as e:
-            print(f"Error fetching {ticker}: {e}")
+    for ticker in tickers:
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="1y")
+        if hist.empty:
             continue
+        hist = hist.reset_index()[["Date", "Close"]]
+        hist["Ticker"] = ticker
+        all_data.append(hist)
 
     if not all_data:
         return None
@@ -188,33 +167,6 @@ def parse_cli_to_json(cli_output: str):
                 continue
     return data
 
-
-def calculate_sp500_metrics(merged_csv_path):
-    """Calculate S&P 500 return and volatility from the merged CSV"""
-    try:
-        df = pd.read_csv(merged_csv_path)
-        sp500_data = df[df['Ticker'] == 'S&P 500'].copy()
-        
-        if sp500_data.empty:
-            return None
-        
-        sp500_data = sp500_data.sort_values('Date')
-        sp500_data['Returns'] = sp500_data['Close'].pct_change()
-        
-        mean_return = sp500_data['Returns'].mean() * 252 * 100
-        volatility = sp500_data['Returns'].std() * np.sqrt(252) * 100
-        
-        total_return = ((sp500_data['Close'].iloc[-1] / sp500_data['Close'].iloc[0]) - 1) * 100
-        
-        return {
-            'TotalReturn': total_return,
-            'MeanReturn': mean_return,
-            'Volatility': volatility
-        }
-    except Exception as e:
-        print(f"Error calculating S&P 500 metrics: {e}")
-        return None
-
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     try:
@@ -252,10 +204,6 @@ def upload_csv():
             return f"C++ engine failed:\n{result.stderr}", 500
 
         portfolio_json = parse_cli_to_json(result.stdout)
-        
-        sp500_metrics = calculate_sp500_metrics(merged_csv_path)
-        if sp500_metrics:
-            portfolio_json['sp500'] = sp500_metrics
 
         if 'user_id' in session:
             portfolio = portfolio_json.get('portfolio', {})
@@ -296,10 +244,17 @@ def history():
 
     return render_template("history.html", history=rows)
 
-
-client = genai.Client(api_key="AIzaSyBu89WlvvRQFJYkwP23-oRh6bkaR2zeR6s")
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def interpret_portfolio(summary):
+    stocks_text = "\n".join([
+        f"{s['ticker']} — Weight: {s['weight']*100:.1f}%, "
+        f"Return: {s['mean_return']*100:.2f}%, "
+        f"Volatility: {s['volatility']*100:.2f}%"
+        for s in summary['stocks']
+    ])
+    
     prompt = f"""
     interpret this user's stock portfolio in a simple way that a beginner investor can understand,
     be sure to include a precise summary of what everything means, aswell as a layman-based description
@@ -308,17 +263,8 @@ def interpret_portfolio(summary):
     - Total Return: {summary['total_return']*100:.2f}%
     - Portfolio Volatility: {summary['volatility']*100:.2f}%
 
-    S&P 500 Comparison:
-    - S&P 500 Return: {summary.get('sp500_return', 0)*100:.2f}%
-    - S&P 500 Volatility: {summary.get('sp500_volatility', 0)*100:.2f}%
-
     Stocks:
-    {[
-        f"{s['ticker']} — Weight: {s['weight']*100:.1f}%, "
-        f"Return: {s['mean_return']*100:.2f}%, "
-        f"Volatility: {s['volatility']*100:.2f}%"
-        for s in summary['stocks']
-    ]}
+    {stocks_text}
 
     key points to emphasize on:
     - which stocks are contributing most to risk?
@@ -328,28 +274,27 @@ def interpret_portfolio(summary):
     which ones to refrain from, etc.
 
     requirements (IMPORTANT!):
-    - please keep it only THREE paragraphs long, don't bother formatting
-    - each paragraph should be a maximum of 2-3 sentences (whatever takes less time)
-    - format all paragraphs in html (there should be space between paragraphs)
+    - please keep it only three paragraphs long, don't bother formatting
+    - each paragraph should be a maximum of 4 sentences
+    - format both paragraphs in html (there should be space between the end 
+        of the first and start of the second
     - title each paragraph in bold, and add an emoji before the title
-    - first two paragraphs: general portfolio analysis
-    - THIRD paragraph MUST have the title "📊 Individual Stocks vs S&P 500"
-    - in the third paragraph, compare the user's portfolio performance against the S&P 500
-    - provide a clear recommendation: should they continue with individual stock investing 
-      or would they be better off just investing in an S&P 500 index fund?
-    - base this recommendation on their returns, volatility, and risk-adjusted performance
-    - please remember, this is a layman interpretation. it should as beginner friendly as possible
+    - second paragraph talks about your portfolio vs s&p 500
+    - third paragraph with the title "What should you do?"
+    - remember, simplicity
     """
-
+    
     response = client.models.generate_content(
         model="gemini-2.5-flash", contents=prompt
     )
-
+    
     return response.text
+
 
 @app.get("/historical_data")
 def historical_data():
     return send_file("../uploads/merged_prices.csv", mimetype="text/csv")
+
 
 @app.route('/interpret', methods=['POST'])
 def interpret():
@@ -358,8 +303,10 @@ def interpret():
         analysis = interpret_portfolio(summary)
         return jsonify({"analysis": analysis})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
