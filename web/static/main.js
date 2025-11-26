@@ -75,12 +75,12 @@ form.addEventListener('submit', async (e) => {
 });
 
 function buildSummary(data) {
-    const sp500 = data.sp500 || {};
-    return {
+    console.log("Full data received:", data);
+    console.log("S&P 500 data:", data.sp500);
+    
+    const summary = {
         total_return: data.portfolio.TotalReturn / 100.0,
         volatility: data.portfolio.PortfolioVolatility / 100.0,
-        sp500_return: (sp500.TotalReturn || 0) / 100.0,
-        sp500_volatility: (sp500.Volatility || 0) / 100.0,
         stocks: data.stocks.map(s => ({
             ticker: s.Ticker,
             weight: s.Weight,
@@ -88,6 +88,16 @@ function buildSummary(data) {
             volatility: s.Volatility
         }))
     };
+    
+    if (data.sp500 && data.sp500.TotalReturn !== undefined) {
+        summary.sp500_return = data.sp500.TotalReturn / 100.0;
+        summary.sp500_volatility = data.sp500.Volatility / 100.0;
+        console.log("S&P 500 added to summary:", summary);
+    } else {
+        console.log("S&P 500 data not found or incomplete");
+    }
+    
+    return summary;
 }
 
 async function requestAI() {
@@ -139,34 +149,7 @@ function renderResults(data) {
     </tr>`;
     html += '</table>';
 
-    html += '<table>';
-    html += '<tr>'
-         + '<th data-tooltip="The stock ticker symbol, used to identify the stock.">Ticker</th>'
-         + '<th data-tooltip="Number of shares held in the portfolio.">Shares</th>'
-         + '<th data-tooltip="Proportion of this stock in the portfolio by value.">Weight</th>'
-         + '<th data-tooltip="Average return of the stock over a period.">Mean Return</th>'
-         + '<th data-tooltip="Volatility: Standard deviation of stock returns, measures risk.">Volatility</th>'
-         + '<th data-tooltip="Value at Risk, estimated potential loss over a period at a given confidence level.">VaR</th>'
-         + '</tr>';
-
-    data.stocks.forEach(s => {
-        html += `<tr>
-            <td>${s.Ticker}</td>
-            <td>${s.Shares}</td>
-            <td>${(s.Weight*100).toFixed(2)}%</td>
-            <td class="${s.MeanReturn >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
-                ${s.MeanReturn.toFixed(4)}%
-            </td>
-            <td class="${s.Volatility >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
-                ${s.Volatility.toFixed(4)}
-            </td>
-            <td class="${s.VaR >= 0 ? 'negative' : 'positive'}" style="font-weight:bold;">
-                ${s.VaR.toFixed(4)}%
-            </td>
-        </tr>`;
-    });
-    html += '</table>';
-
+    // S&P 500 Comparison Table
     if (data.sp500) {
         html += '<h3>Portfolio vs S&P 500 Comparison</h3>';
         html += '<table>';
@@ -202,6 +185,36 @@ function renderResults(data) {
         </tr>`;
         html += '</table>';
     }
+
+    // Stock Details Table
+    html += '<h3>Individual Stock Analysis</h3>';
+    html += '<table>';
+    html += '<tr>'
+         + '<th data-tooltip="The stock ticker symbol, used to identify the stock.">Ticker</th>'
+         + '<th data-tooltip="Number of shares held in the portfolio.">Shares</th>'
+         + '<th data-tooltip="Proportion of this stock in the portfolio by value.">Weight</th>'
+         + '<th data-tooltip="Average return of the stock over a period.">Mean Return</th>'
+         + '<th data-tooltip="Volatility: Standard deviation of stock returns, measures risk.">Volatility</th>'
+         + '<th data-tooltip="Value at Risk, estimated potential loss over a period at a given confidence level.">VaR</th>'
+         + '</tr>';
+
+    data.stocks.forEach(s => {
+        html += `<tr>
+            <td>${s.Ticker}</td>
+            <td>${s.Shares}</td>
+            <td>${(s.Weight*100).toFixed(2)}%</td>
+            <td class="${s.MeanReturn >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${s.MeanReturn.toFixed(4)}%
+            </td>
+            <td class="${s.Volatility >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${s.Volatility.toFixed(4)}
+            </td>
+            <td class="${s.VaR >= 0 ? 'negative' : 'positive'}" style="font-weight:bold;">
+                ${s.VaR.toFixed(4)}%
+            </td>
+        </tr>`;
+    });
+    html += '</table>';
 
     html += `<button id="aiBtn" class="big-btn smooth-btn">What does this mean?</button>`;
     html += `<div id="aiResults" class="hidden"></div>`;
@@ -250,8 +263,9 @@ async function loadHistoricalCharts() {
         let longestTicker = null;
         let maxPoints = 0;
         
+        // Find the ticker with most data points (excluding S&P 500)
         Object.keys(dataByTicker).forEach(ticker => {
-            if (ticker === "S&P 500") return;
+            if (ticker === "S&P 500" || ticker === "^GSPC") return;
             const points = dataByTicker[ticker].length;
             if (points > maxPoints) {
                 maxPoints = points;
@@ -271,7 +285,8 @@ async function loadHistoricalCharts() {
         }
 
         Object.keys(dataByTicker).forEach((ticker, index) => {
-            if (ticker === "S&P 500") return;
+            // Skip S&P 500 from the chart as per requirements
+            if (ticker === "S&P 500" || ticker === "^GSPC") return;
             
             const sorted = dataByTicker[ticker].sort((a, b) => new Date(a.date) - new Date(b.date));
 

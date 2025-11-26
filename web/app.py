@@ -6,6 +6,7 @@ import os
 import subprocess
 import yfinance as yf
 import pandas as pd
+import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -133,6 +134,36 @@ def fetch_historical_data(tickers):
     return merged_df
 
 
+def calculate_sp500_metrics():
+    """Calculate S&P 500 returns and volatility for comparison"""
+    try:
+        sp500 = yf.Ticker("^GSPC")
+        hist = sp500.history(period="1y")
+        
+        if hist.empty or len(hist) < 2:
+            return None
+        
+        # Calculate total return over the period
+        start_price = hist['Close'].iloc[0]
+        end_price = hist['Close'].iloc[-1]
+        total_return = ((end_price - start_price) / start_price) * 100
+        
+        # Calculate daily returns and annualized volatility
+        hist['Returns'] = hist['Close'].pct_change()
+        returns = hist['Returns'].dropna()
+        volatility = returns.std() * np.sqrt(252) * 100
+        
+        print(f"S&P 500 Debug - Total Return: {total_return}, Volatility: {volatility}")  # Debug line
+        
+        return {
+            "TotalReturn": total_return,
+            "Volatility": volatility
+        }
+    except Exception as e:
+        print(f"Error calculating S&P 500 metrics: {e}")
+        return None
+
+
 def save_merged_csv(df):
     csv_path = os.path.join(app.config['UPLOAD_FOLDER'], "merged_prices.csv")
     df.to_csv(csv_path, index=False)
@@ -204,6 +235,11 @@ def upload_csv():
             return f"C++ engine failed:\n{result.stderr}", 500
 
         portfolio_json = parse_cli_to_json(result.stdout)
+        
+        # Add S&P 500 comparison
+        sp500_metrics = calculate_sp500_metrics()
+        if sp500_metrics:
+            portfolio_json['sp500'] = sp500_metrics
 
         if 'user_id' in session:
             portfolio = portfolio_json.get('portfolio', {})
@@ -255,6 +291,16 @@ def interpret_portfolio(summary):
         for s in summary['stocks']
     ])
     
+    sp500_comparison = ""
+    if 'sp500_return' in summary and 'sp500_volatility' in summary:
+        sp500_comparison = f"""
+        
+        S&P 500 Comparison:
+        - S&P 500 Return: {summary['sp500_return']*100:.2f}%
+        - S&P 500 Volatility: {summary['sp500_volatility']*100:.2f}%
+        - Your portfolio vs S&P 500: {"outperforming" if summary['total_return'] > summary['sp500_return'] else "underperforming"} by {abs(summary['total_return'] - summary['sp500_return'])*100:.2f}%
+        """
+    
     prompt = f"""
     interpret this user's stock portfolio in a simple way that a beginner investor can understand,
     be sure to include a precise summary of what everything means, aswell as a layman-based description
@@ -262,6 +308,7 @@ def interpret_portfolio(summary):
     Portfolio Summary:
     - Total Return: {summary['total_return']*100:.2f}%
     - Portfolio Volatility: {summary['volatility']*100:.2f}%
+    {sp500_comparison}
 
     Stocks:
     {stocks_text}
