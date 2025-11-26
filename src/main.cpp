@@ -22,7 +22,6 @@ int main(int argc, char** argv) {
     std::string portfolio_csv = argv[1];
     std::string prices_csv = argv[2];
 
-    // Aggregate tickers and shares from user's portfolio CSV
     std::unordered_map<std::string, double> ticker_to_shares;
     std::ifstream file(portfolio_csv);
     if (!file.is_open()) {
@@ -31,7 +30,7 @@ int main(int argc, char** argv) {
     }
 
     std::string line;
-    getline(file, line); // skip header
+    getline(file, line);
     while (getline(file, line)) {
         std::stringstream ss(line);
         std::string ticker, qty_str;
@@ -40,7 +39,7 @@ int main(int argc, char** argv) {
         if (!getline(ss, qty_str, ',')) continue;
 
         double qty = std::stod(qty_str);
-        ticker_to_shares[ticker] += qty; // sum if ticker repeats
+        ticker_to_shares[ticker] += qty; 
     }
 
     std::vector<std::string> tickers;
@@ -50,7 +49,6 @@ int main(int argc, char** argv) {
         shares.push_back(qty);
     }
 
-    // Build portfolio
     portfolio pf;
     pf.shares = shares;
 

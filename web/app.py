@@ -6,6 +6,7 @@ import os
 import subprocess
 import yfinance as yf
 import pandas as pd
+import numpy as np
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -45,21 +46,18 @@ RISK_ENGINE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 @app.route('/')
 def index():
-    # Redirect to login if not logged in
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('index.html')
 
 @app.route('/login')
 def login_page():
-    # If already logged in, redirect to main page
     if 'user_id' in session:
         return redirect(url_for('index'))
     return render_template('login.html')
 
 @app.route('/signup_page')
 def signup_page():
-    # If already logged in, redirect to main page
     if 'user_id' in session:
         return redirect(url_for('index'))
     return render_template('signup.html')
@@ -77,7 +75,6 @@ def signup():
                   (username, generate_password_hash(password)))
         conn.commit()
         
-        # Auto-login after signup
         c.execute("SELECT id FROM users WHERE username=?", (username,))
         user = c.fetchone()
         session['user_id'] = user[0]
@@ -116,15 +113,38 @@ def logout():
 def fetch_historical_data(tickers):
     """Fetch historical prices for multiple tickers and return a single merged DataFrame"""
     all_data = []
+    
+    ticker_corrections = {
+        'FB': 'META',   
+        'GOOG': 'GOOGL',   
+    }
 
-    for ticker in tickers:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1y")
-        if hist.empty:
+    tickers_with_sp500 = tickers + ["^GSPC"]
+
+    for ticker in tickers_with_sp500:
+        try:
+            original_ticker = ticker
+            corrected_ticker = ticker_corrections.get(ticker, ticker)
+            
+            if corrected_ticker != original_ticker:
+                print(f"Note: Converting {original_ticker} -> {corrected_ticker}")
+            
+            stock = yf.Ticker(corrected_ticker)
+            hist = stock.history(period="1y", auto_adjust=True)
+            
+            if hist.empty:
+                print(f"Warning: No data for {ticker}")
+                continue
+                
+            hist = hist.reset_index()[["Date", "Close"]]
+            hist["Ticker"] = "S&P 500" if ticker == "^GSPC" else original_ticker
+            
+            print(f"{original_ticker}: {hist['Date'].min()} to {hist['Date'].max()}")
+            
+            all_data.append(hist)
+        except Exception as e:
+            print(f"Error fetching {ticker}: {e}")
             continue
-        hist = hist.reset_index()[["Date", "Close"]]
-        hist["Ticker"] = ticker
-        all_data.append(hist)
 
     if not all_data:
         return None
@@ -168,6 +188,33 @@ def parse_cli_to_json(cli_output: str):
                 continue
     return data
 
+
+def calculate_sp500_metrics(merged_csv_path):
+    """Calculate S&P 500 return and volatility from the merged CSV"""
+    try:
+        df = pd.read_csv(merged_csv_path)
+        sp500_data = df[df['Ticker'] == 'S&P 500'].copy()
+        
+        if sp500_data.empty:
+            return None
+        
+        sp500_data = sp500_data.sort_values('Date')
+        sp500_data['Returns'] = sp500_data['Close'].pct_change()
+        
+        mean_return = sp500_data['Returns'].mean() * 252 * 100
+        volatility = sp500_data['Returns'].std() * np.sqrt(252) * 100
+        
+        total_return = ((sp500_data['Close'].iloc[-1] / sp500_data['Close'].iloc[0]) - 1) * 100
+        
+        return {
+            'TotalReturn': total_return,
+            'MeanReturn': mean_return,
+            'Volatility': volatility
+        }
+    except Exception as e:
+        print(f"Error calculating S&P 500 metrics: {e}")
+        return None
+
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     try:
@@ -205,6 +252,10 @@ def upload_csv():
             return f"C++ engine failed:\n{result.stderr}", 500
 
         portfolio_json = parse_cli_to_json(result.stdout)
+        
+        sp500_metrics = calculate_sp500_metrics(merged_csv_path)
+        if sp500_metrics:
+            portfolio_json['sp500'] = sp500_metrics
 
         if 'user_id' in session:
             portfolio = portfolio_json.get('portfolio', {})
@@ -257,6 +308,10 @@ def interpret_portfolio(summary):
     - Total Return: {summary['total_return']*100:.2f}%
     - Portfolio Volatility: {summary['volatility']*100:.2f}%
 
+    S&P 500 Comparison:
+    - S&P 500 Return: {summary.get('sp500_return', 0)*100:.2f}%
+    - S&P 500 Volatility: {summary.get('sp500_volatility', 0)*100:.2f}%
+
     Stocks:
     {[
         f"{s['ticker']} — Weight: {s['weight']*100:.1f}%, "
@@ -273,13 +328,17 @@ def interpret_portfolio(summary):
     which ones to refrain from, etc.
 
     requirements (IMPORTANT!):
-    - please keep it only two paragraphs long, don't bother formatting
-    - each paragraph should be a maximum of 4 sentences
-    - format both paragraphs in html (there should be space between the end 
-        of the first and start of the second
+    - please keep it only THREE paragraphs long, don't bother formatting
+    - each paragraph should be a maximum of 2-3 sentences (whatever takes less time)
+    - format all paragraphs in html (there should be space between paragraphs)
     - title each paragraph in bold, and add an emoji before the title
-    - third paragraph with the title "What should you do?"
-    - add 2 sentences describing what you should do
+    - first two paragraphs: general portfolio analysis
+    - THIRD paragraph MUST have the title "📊 Individual Stocks vs S&P 500"
+    - in the third paragraph, compare the user's portfolio performance against the S&P 500
+    - provide a clear recommendation: should they continue with individual stock investing 
+      or would they be better off just investing in an S&P 500 index fund?
+    - base this recommendation on their returns, volatility, and risk-adjusted performance
+    - please remember, this is a layman interpretation. it should as beginner friendly as possible
     """
 
     response = client.models.generate_content(

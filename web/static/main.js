@@ -75,9 +75,12 @@ form.addEventListener('submit', async (e) => {
 });
 
 function buildSummary(data) {
+    const sp500 = data.sp500 || {};
     return {
         total_return: data.portfolio.TotalReturn / 100.0,
         volatility: data.portfolio.PortfolioVolatility / 100.0,
+        sp500_return: (sp500.TotalReturn || 0) / 100.0,
+        sp500_volatility: (sp500.Volatility || 0) / 100.0,
         stocks: data.stocks.map(s => ({
             ticker: s.Ticker,
             weight: s.Weight,
@@ -91,7 +94,7 @@ async function requestAI() {
     if (!lastSummary) return;
 
     const aiDiv = document.getElementById('aiResults');
-    aiDiv.innerHTML = "<p>Generating AI analysis...</p>";
+    aiDiv.innerHTML = "<p>Generating report...</p>";
     aiDiv.classList.remove('fade-in');
     aiDiv.classList.remove('hidden');
 
@@ -108,7 +111,7 @@ async function requestAI() {
         }
 
         const data = await res.json();
-        aiDiv.innerHTML = `<h3>AI Interpretation</h3><p>${data.analysis}</p>`;
+        aiDiv.innerHTML = `<h3>What this means for you.</h3><p>${data.analysis}</p>`;
         aiDiv.classList.add('fade-in');
 
     } catch (err) {
@@ -164,7 +167,43 @@ function renderResults(data) {
     });
     html += '</table>';
 
-    html += `<button id="aiBtn" class="big-btn smooth-btn">Interpret My Results!</button>`;
+    if (data.sp500) {
+        html += '<h3>Portfolio vs S&P 500 Comparison</h3>';
+        html += '<table>';
+        html += '<tr><th>Metric</th><th>Your Portfolio</th><th>S&P 500</th><th>Difference</th></tr>';
+        
+        const returnDiff = data.portfolio.TotalReturn - data.sp500.TotalReturn;
+        const volDiff = data.portfolio.PortfolioVolatility - data.sp500.Volatility;
+        
+        html += `<tr>
+            <td style="font-weight:bold;">Total Return</td>
+            <td class="${data.portfolio.TotalReturn >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${data.portfolio.TotalReturn.toFixed(2)}%
+            </td>
+            <td class="${data.sp500.TotalReturn >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${data.sp500.TotalReturn.toFixed(2)}%
+            </td>
+            <td class="${returnDiff >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${returnDiff >= 0 ? '+' : ''}${returnDiff.toFixed(2)}%
+            </td>
+        </tr>`;
+        
+        html += `<tr>
+            <td style="font-weight:bold;">Volatility (Risk)</td>
+            <td class="negative" style="font-weight:bold;">
+                ${data.portfolio.PortfolioVolatility.toFixed(2)}%
+            </td>
+            <td class="negative" style="font-weight:bold;">
+                ${data.sp500.Volatility.toFixed(2)}%
+            </td>
+            <td class="${volDiff <= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                ${volDiff >= 0 ? '+' : ''}${volDiff.toFixed(2)}%
+            </td>
+        </tr>`;
+        html += '</table>';
+    }
+
+    html += `<button id="aiBtn" class="big-btn smooth-btn">What does this mean?</button>`;
     html += `<div id="aiResults" class="hidden"></div>`;
 
     resultsDiv.innerHTML = html;
@@ -208,29 +247,56 @@ async function loadHistoricalCharts() {
         canvas.style.width = "100%";
         chartsDiv.appendChild(canvas);
 
+        let longestTicker = null;
+        let maxPoints = 0;
+        
+        Object.keys(dataByTicker).forEach(ticker => {
+            if (ticker === "S&P 500") return;
+            const points = dataByTicker[ticker].length;
+            if (points > maxPoints) {
+                maxPoints = points;
+                longestTicker = ticker;
+            }
+        });
+
         const labels = [];
         const datasets = [];
         const colors = [
             '#ff6384','#36a2eb','#ffcd56','#4bc0c0','#9966ff','#ff9f40','#c9cbcf'
         ];
 
+        if (longestTicker) {
+            const sorted = dataByTicker[longestTicker].sort((a, b) => new Date(a.date) - new Date(b.date));
+            sorted.forEach(d => labels.push(d.date));
+        }
+
         Object.keys(dataByTicker).forEach((ticker, index) => {
+            if (ticker === "S&P 500") return;
+            
             const sorted = dataByTicker[ticker].sort((a, b) => new Date(a.date) - new Date(b.date));
-            if (labels.length === 0) sorted.forEach(d => labels.push(d.date));
 
             const color = colors[index % colors.length];
+            
+            const priceMap = {};
+            sorted.forEach(d => {
+                priceMap[d.date] = d.close;
+            });
+            
+            const mappedData = labels.map(date => priceMap[date] || null);
+            
             datasets.push({
                 label: ticker,
-                data: sorted.map(d => d.close),
+                data: mappedData,
                 borderColor: color,
                 backgroundColor: color,
                 borderWidth: 1.25,
                 tension: 0.35,
-                pointRadius: 2,
+                pointRadius: 1.5,
                 pointHoverRadius: 4,
-                pointBackgroundColor: color,  // points match line color
+                pointBackgroundColor: color,
                 pointBorderWidth: 0,
-                showLine: true
+                showLine: true,
+                spanGaps: true
             });
         });
 
@@ -254,4 +320,3 @@ async function loadHistoricalCharts() {
         chartsDiv.innerHTML = "<p>Error loading chart data.</p>";
     }
 }
-

@@ -7,16 +7,13 @@
 </head>
 <body>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Top navigation -->
     <nav class="top-nav">
         <img src="{{ url_for('static', filename='coins-512.png') }}" class="nav-logo" alt="Portfolia Logo">
-
         <div class="nav-center">
             <button class="nav-btn active" data-page="information">INFORMATION</button>
             <button class="nav-btn" data-page="risk">RISK ANALYZER</button>
             <button class="nav-btn" data-page="documentation">DOCUMENTATION</button>
         </div>
-
         <div class="account-menu">
             <button id="accountBtn" class="nav-btn">ACCOUNT ▼</button>
             <div id="accountDropdown">
@@ -25,21 +22,50 @@
             </div>
         </div>
     </nav>
-
-
     <div class="container" id="mainContainer">
-
-        <!-- INFORMATION PAGE -->
         <div class="page" id="informationPage">
-            <h1>Information</h1>
-            <p>Edit this page later with layman-friendly information about portfolios and risk.</p>
+            <h1>Understanding Your Portfolio</h1>
+            <p class="info-subtitle">Investment terms explained in plain English</p>
+            
+            <div class="info-grid">
+                <div class="info-card card-blue">
+                    <h3>Total Return</h3>
+                    <p>This is how much money you've made (or lost) overall. If you invested $1,000 and now have $1,100, your total return is 10%. Simple as that!</p>
+                </div>
+
+                <div class="info-card card-red">
+                    <h3>Volatility</h3>
+                    <p>Think of this as the "bumpiness" of your investment ride. High volatility means your portfolio value swings up and down a lot. Low volatility means it's more stable and predictable.</p>
+                </div>
+
+                <div class="info-card card-green">
+                    <h3>Mean Return</h3>
+                    <p>The average return of a stock over time. If a stock goes up 5% one month and down 3% the next, the mean return helps you see the "typical" performance.</p>
+                </div>
+
+                <div class="info-card card-yellow">
+                    <h3>Weight</h3>
+                    <p>What percentage of your money is in each stock. If you have $1,000 total and $300 in Apple stock, Apple has a 30% weight in your portfolio.</p>
+                </div>
+
+                <div class="info-card card-orange">
+                    <h3>Value at Risk (VaR)</h3>
+                    <p>The maximum amount you could lose on a bad day (with 95% confidence). If your VaR is 5%, you could lose up to 5% of your investment on a really bad day.</p>
+                </div>
+
+                <div class="info-card card-teal">
+                    <h3>Diversification</h3>
+                    <p>The classic "don't put all your eggs in one basket" rule. Spreading your money across different stocks reduces risk because if one crashes, you don't lose everything.</p>
+                </div>
+            </div>
+
+            <div class="info-tip">
+                <p><strong>Pro Tip:</strong> Lower volatility and higher returns are ideal, but they rarely come together. Most investments are a balance between risk and reward!</p>
+            </div>
         </div>
 
-        <!-- RISK ANALYZER PAGE -->
         <div class="page" id="riskPage">
             <img src="{{ url_for('static', filename='logo.png') }}" class="page-logo" alt="Portfolia Logo">
-            <h2>Portfolio Risk Analyzer</h2>
-
             <div class="options" id="frontOptions">
                 <div class="button-row">
                     <div class="option-group">
@@ -56,20 +82,84 @@
                     </div>
                 </div>
             </div>
-
             <div id="results" class="fade-in hidden"></div>
         </div>
 
-        <!-- DOCUMENTATION PAGE -->
         <div class="page" id="documentationPage">
             <h1>Documentation</h1>
-            <p>This page contains the structure and explanation of the project. Edit as needed.</p>
+            
+            <div class="doc-section">
+                <h2>How It Works</h2>
+                <div class="doc-card">
+                    <h3>1. Upload Your Portfolio</h3>
+                    <p>Export your holdings as a CSV file from your brokerage (Robinhood, TD Ameritrade, etc.) and upload it to Portfolia.</p>
+                </div>
+                
+                <div class="doc-card">
+                    <h3>2. Data Processing</h3>
+                    <p>Our system fetches real-time historical stock data using Yahoo Finance API and processes it through our C++ risk engine for lightning-fast calculations.</p>
+                </div>
+                
+                <div class="doc-card">
+                    <h3>3. Risk Analysis</h3>
+                    <p>The engine calculates key metrics including volatility, Value at Risk (VaR), mean returns, and portfolio correlations using advanced financial mathematics.</p>
+                </div>
+                
+                <div class="doc-card">
+                    <h3>4. AI Interpretation</h3>
+                    <p>Google's Gemini AI analyzes your results and provides personalized insights, comparing your performance against the S&P 500 and offering actionable recommendations.</p>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h2>Technical Architecture</h2>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <strong>Backend:</strong> Flask (Python)
+                    </div>
+                    <div class="tech-item">
+                        <strong>Risk Engine:</strong> C++ (High-performance calculations)
+                    </div>
+                    <div class="tech-item">
+                        <strong>Frontend:</strong> JavaScript, Chart.js
+                    </div>
+                    <div class="tech-item">
+                        <strong>Data Source:</strong> Yahoo Finance API
+                    </div>
+                    <div class="tech-item">
+                        <strong>AI:</strong> Google Gemini 2.5 Flash
+                    </div>
+                    <div class="tech-item">
+                        <strong>Database:</strong> SQLite
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h2>GitHub Repository</h2>
+                <p>View the complete source code, contribute, or report issues:</p>
+                <a href="https://github.com/aftwasiq/portfolio-risk-analyzer" target="_blank" class="github-link">
+                    github.com/aftwasiq/portfolio-risk-analyzer
+                </a>
+            </div>
+
+            <div class="doc-section">
+                <h2>Project Authors</h2>
+                <div class="authors-grid">
+                    <div class="author-card">Abdullah Wasiq</div>
+                    <div class="author-card">Parth Bhatt</div>
+                    <div class="author-card">Rayyan Ahmad</div>
+                    <div class="author-card">Maaz Ahmad</div>
+                    <div class="author-card">Zohaib Ali</div>
+                </div>
+            </div>
+
+            <div class="doc-footer">
+                <p>Built for smarter investing</p>
+            </div>
         </div>
-
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
-

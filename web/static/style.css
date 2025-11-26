@@ -30,12 +30,11 @@ h2 {
     margin-bottom: 30px;
 }
 
-/* Top navigation bar */
 .top-nav {
     display: flex;
     justify-content: space-between;
     background-color: #1a1a1a;
-    padding: 10px 40px 10px 40px;
+    padding: 10px 25px;
     font-size: 1.1rem;
     border-bottom: none;
     align-items: center;
@@ -48,8 +47,8 @@ h2 {
 
 .nav-center {
     display: flex;
-    gap: 45px;
-    margin-left: 140px; /* pushes the middle buttons to the right */
+    gap: 30px;
+    margin-left: 120px;
 }
 
 .nav-btn {
@@ -59,7 +58,7 @@ h2 {
     font-family: 'Roboto Mono', monospace;
     font-size: 1.1rem;
     margin: 0;
-    padding: 12px 30px;
+    padding: 12px 20px;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
 }
@@ -70,11 +69,9 @@ h2 {
     transform: translateY(-1px);
 }
 
-/* Pages */
 .page { display: none; }
 .page.active { display: block; }
 
-/* Buttons */
 button {
     font-family: 'Roboto Mono', monospace;
     font-size: 1rem;
@@ -102,7 +99,6 @@ button {
     transform: translateY(-2px);
 }
 
-/* Helper text under buttons */
 .helper-text {
     color: #888;
     font-style: italic;
@@ -110,15 +106,18 @@ button {
     font-size: 0.9rem;
 }
 
-/* Upload dropdown fix */
 .upload-wrapper {
     position: relative;
     display: inline-block;
 }
 
+.option-group {
+    position: relative;
+}
+
 #uploadForm {
     position: absolute;
-    top: calc(100% + 5px); /* Position below button, above helper text */
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
     background-color: #1e1e1e;
@@ -145,7 +144,6 @@ button {
     font-size: 0.9rem;
 }
 
-/* Table */
 table {
     border-collapse: collapse;
     margin: 20px auto;
@@ -161,6 +159,7 @@ th, td {
     border: none;
     padding: 10px;
     text-align: center;
+    position: relative;
 }
 
 th {
@@ -171,15 +170,38 @@ tr:nth-child(even) td {
     background-color: #1c1c1c;
 }
 
-/* positive/negative coloring */
-.positive { color: #4caf50; font-weight: bold; }
-.negative { color: #f44336; font-weight: bold; }
+th[data-tooltip] {
+    cursor: help;
+}
+
+th[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2c2c2c;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: normal;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    margin-bottom: 5px;
+}
 
 th[data-tooltip]:hover::after {
     opacity: 1;
 }
 
-/* AI button same as main buttons */
+.positive { color: #4caf50; font-weight: bold; }
+.negative { color: #f44336; font-weight: bold; }
+
 #aiBtn {
     margin-top: 20px;
     font-family: 'Roboto Mono', monospace;
@@ -220,12 +242,14 @@ th[data-tooltip]:hover::after {
     display: flex;
     justify-content: center;
     gap: 40px;
+    margin-top: 80px;
 }
 
 .option-group {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 }
 
 .centered {
@@ -245,7 +269,7 @@ th[data-tooltip]:hover::after {
 }
 
 .auth-logo {
-    width: 120px;
+    width: 300px;
     height: auto;
     margin-bottom: 15px;
 }
@@ -315,7 +339,195 @@ th[data-tooltip]:hover::after {
 }
 
 .page-logo {
-    width: 300px;
+    width: 400px;
     margin-top: 10px;
     margin-bottom: 20px;
+}
+
+.info-subtitle {
+    color: #888;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin: 40px 0;
+    text-align: left;
+}
+
+.info-card {
+    background-color: var(--card-color);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.card-blue {
+    --card-color: #1e3a5f;
+}
+
+.card-red {
+    --card-color: #5f1e1e;
+}
+
+.card-green {
+    --card-color: #1e5f2d;
+}
+
+.card-yellow {
+    --card-color: #5f4d1e;
+}
+
+.card-orange {
+    --card-color: #5f2d1e;
+}
+
+.card-teal {
+    --card-color: #1e4e4a;
+}
+
+.info-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.info-card p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #e0e0e0;
+}
+
+.info-tip {
+    background-color: #1f2937;
+    padding: 20px 30px;
+    border-radius: 12px;
+    margin-top: 40px;
+}
+
+.info-tip p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Documentation Page Styles */
+.doc-section {
+    margin: 40px 0;
+    text-align: left;
+}
+
+.doc-section h2 {
+    font-size: 2rem;
+    margin-bottom: 25px;
+    color: #fff;
+    padding-bottom: 10px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.doc-card {
+    background-color: #1e293b;
+    padding: 20px 25px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    transition: transform 0.2s ease;
+}
+
+.doc-card:hover {
+    transform: translateX(5px);
+}
+
+.doc-card h3 {
+    color: #60a5fa;
+    margin-bottom: 10px;
+    font-size: 1.3rem;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.doc-card p {
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.tech-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.tech-item {
+    background-color: #1e293b;
+    padding: 15px 20px;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.tech-item:hover {
+    background-color: #334155;
+}
+
+.tech-item strong {
+    color: #60a5fa;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.github-link {
+    display: inline-block;
+    background-color: #1e293b;
+    color: #58a6ff;
+    padding: 15px 25px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.github-link:hover {
+    background-color: #0d1117;
+    transform: translateY(-2px);
+}
+
+.authors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.author-card {
+    background-color: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.author-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.doc-footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 30px;
+    color: #888;
+    font-style: italic;
 }
